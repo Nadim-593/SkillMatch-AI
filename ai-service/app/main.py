@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Header, Depends
+from fastapi import FastAPI, HTTPException, Header, Depends, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 
@@ -11,6 +11,7 @@ from app.schemas import (
     CVExtractionRequest, CVExtractionResponse,
     JobExtractionRequest, JobExtractionResponse,
     MatchRequest, MatchResponse,
+    DocumentExtractResponse,
 )
 from app.embeddings import get_model, generate_embeddings
 
@@ -60,6 +61,56 @@ async def health_check():
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
+@app.post("/api/v1/extract/document", response_model=DocumentExtractResponse, tags=["Extraction"])
+async def extract_document(
+    file: UploadFile = File(...),
+    _: bool = Depends(verify_internal_key),
+):
+    from app.document_parser import extract_document_text
+    try:
+        content = await file.read()
+        text = extract_document_text(content, file.filename)
+        return DocumentExtractResponse(
+            success=True,
+            filename=file.filename,
+            extracted_text=text,
+            character_count=len(text),
+            message=f"Extracted {len(text)} characters from {file.filename}",
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Error parsing document {file.filename}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to parse document: {str(e)}")
+
+@app.post("/api/v1/extract/cv", response_model=CVExtractionResponse, tags=["Extraction"])
+async def extract_cv(
+    request: CVExtractionRequest,
+    _: bool = Depends(verify_internal_key),
+):
+    from app.extraction import extract_cv_skills
+    try:
+        return await extract_cv_skills(request)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"CV extraction error: {e}")
+        raise HTTPException(status_code=500, detail=f"CV extraction failed: {str(e)}")
+
+@app.post("/api/v1/extract/job", response_model=JobExtractionResponse, tags=["Extraction"])
+async def extract_job(
+    request: JobExtractionRequest,
+    _: bool = Depends(verify_internal_key),
+):
+    from app.extraction import extract_job_skills
+    try:
+        return await extract_job_skills(request)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Job extraction error: {e}")
+        raise HTTPException(status_code=500, detail=f"Job extraction failed: {str(e)}")
+
 @app.post("/api/v1/embeddings", response_model=EmbeddingResponse, tags=["Embeddings"])
 async def create_embeddings(
     request: EmbeddingRequest,
@@ -79,26 +130,14 @@ async def create_embeddings(
         logger.error(f"Embedding error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/v1/extract/cv", response_model=CVExtractionResponse, tags=["Extraction"])
-async def extract_cv(
-    request: CVExtractionRequest,
-    _: bool = Depends(verify_internal_key),
-):
-    from app.extraction import extract_cv_skills
-    return await extract_cv_skills(request)
-
-@app.post("/api/v1/extract/job", response_model=JobExtractionResponse, tags=["Extraction"])
-async def extract_job(
-    request: JobExtractionRequest,
-    _: bool = Depends(verify_internal_key),
-):
-    from app.extraction import extract_job_skills
-    return await extract_job_skills(request)
-
 @app.post("/api/v1/match", response_model=MatchResponse, tags=["Matching"])
 async def match_candidate_job(
     request: MatchRequest,
     _: bool = Depends(verify_internal_key),
 ):
     from app.matching import calculate_match
-    return await calculate_match(request)
+    try:
+        return await calculate_match(request)
+    except Exception as e:
+        logger.error(f"Match calculation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

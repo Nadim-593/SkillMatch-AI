@@ -97,3 +97,10 @@ class HealthResponse(BaseModel):
     model_loaded: bool
     mistral_configured: bool
     timestamp: str
+
+class DocumentExtractResponse(BaseModel):
+    success: bool
+    filename: str
+    extracted_text: str = ""
+    character_count: int = 0
+    message: str = ""

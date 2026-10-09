@@ -11,6 +11,8 @@ const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
 const healthRouter = require('./routes/health');
 const authRouter = require('./routes/auth');
+const cvRouter = require('./routes/cv');
+const candidateRouter = require('./routes/candidates');
 
 // Validate environment variables
 validateEnv();
@@ -55,6 +57,8 @@ if (process.env.NODE_ENV !== 'test') {
 // Routes
 app.use('/api/v1/health', healthRouter);
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/cvs', cvRouter);
+app.use('/api/v1/candidates', candidateRouter);
 
 // 404 and error handling
 app.use(notFound);

@@ -13,6 +13,7 @@ import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 
 import CandidateDashboard from './pages/candidate/Dashboard';
+import CvUploadReview from './pages/candidate/CvUploadReview';
 import RecruiterDashboard from './pages/recruiter/Dashboard';
 import AdminDashboard from './pages/admin/Dashboard';
 
@@ -50,7 +51,7 @@ export default function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<CandidateDashboard />} />
             <Route path="profile" element={<CandidateDashboard />} />
-            <Route path="cv" element={<CandidateDashboard />} />
+            <Route path="cv" element={<CvUploadReview />} />
             <Route path="jobs" element={<CandidateDashboard />} />
             <Route path="matches" element={<CandidateDashboard />} />
             <Route path="history" element={<CandidateDashboard />} />
