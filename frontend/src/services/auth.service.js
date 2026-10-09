@@ -17,6 +17,13 @@ export const authService = {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   },
+  async getMe() {
+    const res = await api.get('/auth/me');
+    if (res.data.user) {
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+    }
+    return res.data;
+  },
   getCurrentUser() {
     try {
       const u = localStorage.getItem('user');

@@ -14,9 +14,9 @@ export default function Register() {
   });
   const password = watch('password');
 
-  const onSubmit = async (data) => {
+  const onSubmit = async ({ name, email, password, role }) => {
     try {
-      await registerUser(data);
+      await registerUser({ name, email, password, role });
       toast.success('Account created! Please sign in with your credentials.');
       navigate('/login');
     } catch (err) {

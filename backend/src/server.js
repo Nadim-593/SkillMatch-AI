@@ -10,6 +10,7 @@ const { validateEnv } = require('./config/env');
 const errorHandler = require('./middleware/errorHandler');
 const notFound = require('./middleware/notFound');
 const healthRouter = require('./routes/health');
+const authRouter = require('./routes/auth');
 
 // Validate environment variables
 validateEnv();
@@ -53,6 +54,7 @@ if (process.env.NODE_ENV !== 'test') {
 
 // Routes
 app.use('/api/v1/health', healthRouter);
+app.use('/api/v1/auth', authRouter);
 
 // 404 and error handling
 app.use(notFound);

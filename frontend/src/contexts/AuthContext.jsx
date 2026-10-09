@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { authService } from '../services/auth.service';
 
 const AuthContext = createContext(null);
@@ -6,6 +6,24 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => authService.getCurrentUser());
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const token = authService.getToken();
+    if (token) {
+      authService
+        .getMe()
+        .then((data) => {
+          if (data?.user) {
+            setUser(data.user);
+          }
+        })
+        .catch(() => {
+          // Token invalid or expired, clear local state
+          authService.logout();
+          setUser(null);
+        });
+    }
+  }, []);
 
   const login = useCallback(async (credentials) => {
     setLoading(true);
