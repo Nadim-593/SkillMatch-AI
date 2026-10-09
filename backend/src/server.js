@@ -14,6 +14,7 @@ const authRouter = require('./routes/auth');
 const cvRouter = require('./routes/cv');
 const candidateRouter = require('./routes/candidates');
 const matchRouter = require('./routes/matches');
+const jobRouter = require('./routes/jobs');
 const { seedLearningResources } = require('./config/seedResources');
 
 // Validate environment variables
@@ -64,6 +65,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/cvs', cvRouter);
 app.use('/api/v1/candidates', candidateRouter);
 app.use('/api/v1/matches', matchRouter);
+app.use('/api/v1/jobs', jobRouter);
 
 // 404 and error handling
 app.use(notFound);

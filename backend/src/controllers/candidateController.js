@@ -31,9 +31,10 @@ const getProfile = async (req, res, next) => {
  */
 const updateProfileSkills = async (req, res, next) => {
   try {
-    const { skills, headline, summary, location, phone } = req.body;
+    const { skills, confirmedSkills, headline, summary, location, phone } = req.body;
+    const targetSkills = skills || confirmedSkills;
 
-    if (!Array.isArray(skills)) {
+    if (!Array.isArray(targetSkills)) {
       return res.status(400).json({
         success: false,
         message: 'Skills must be an array of skill objects.',
@@ -41,7 +42,7 @@ const updateProfileSkills = async (req, res, next) => {
     }
 
     // Format skill objects cleanly
-    const formattedSkills = skills.map((s) => ({
+    const formattedSkills = targetSkills.map((s) => ({
       skillName: (s.skillName || s.skill_name || '').trim(),
       normalizedName: (s.normalizedName || s.normalized_name || s.skillName || '').trim(),
       category: s.category || 'General',

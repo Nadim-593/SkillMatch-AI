@@ -14,14 +14,16 @@ const { generateMatchPdf } = require('../utils/pdfGenerator');
 const fetchCuratedResourcesForSkills = async (skillItems = []) => {
   if (!skillItems || skillItems.length === 0) return [];
 
-  const skillNames = skillItems.map((s) => (s.normalizedName || s.skillName || '').toLowerCase());
+  const names = skillItems
+    .map((s) => s.normalizedName || s.normalized_name || s.skillName || s.skill_name)
+    .filter(Boolean);
   const categories = skillItems.map((s) => s.category).filter(Boolean);
 
   // Exact normalized skill match or matching category
   const resources = await LearningResource.find({
     $or: [
-      { normalizedSkill: { $in: skillItems.map((s) => s.normalizedName || s.skillName) } },
-      { skillTag: { $in: skillItems.map((s) => s.normalizedName || s.skillName) } },
+      { normalizedSkill: { $in: names } },
+      { skillTag: { $in: names } },
     ],
   }).limit(10);
 
