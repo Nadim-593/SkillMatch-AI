@@ -1,0 +1,55 @@
+# Environment files
+.env
+*.env
+!.env.example
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+.cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.Python
+venv/
+env/
+.venv/
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+
+# Uploads
+uploads/
+*.pdf
+*.docx
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+.nyc_output/
+.pytest_cache/
+htmlcov/
+
+# Sentence Transformers model cache
+.cache/
+sentence_transformers_models/
