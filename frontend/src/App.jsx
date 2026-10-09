@@ -14,7 +14,9 @@ import Unauthorized from './pages/Unauthorized';
 
 import CandidateDashboard from './pages/candidate/Dashboard';
 import CvUploadReview from './pages/candidate/CvUploadReview';
+import MatchesView from './pages/candidate/MatchesView';
 import RecruiterDashboard from './pages/recruiter/Dashboard';
+import RankedCandidates from './pages/recruiter/RankedCandidates';
 import AdminDashboard from './pages/admin/Dashboard';
 
 export default function App() {
@@ -52,9 +54,9 @@ export default function App() {
             <Route path="dashboard" element={<CandidateDashboard />} />
             <Route path="profile" element={<CandidateDashboard />} />
             <Route path="cv" element={<CvUploadReview />} />
-            <Route path="jobs" element={<CandidateDashboard />} />
-            <Route path="matches" element={<CandidateDashboard />} />
-            <Route path="history" element={<CandidateDashboard />} />
+            <Route path="jobs" element={<MatchesView />} />
+            <Route path="matches" element={<MatchesView />} />
+            <Route path="history" element={<MatchesView />} />
           </Route>
 
           {/* Recruiter routes */}
@@ -69,7 +71,7 @@ export default function App() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<RecruiterDashboard />} />
             <Route path="jobs" element={<RecruiterDashboard />} />
-            <Route path="candidates" element={<RecruiterDashboard />} />
+            <Route path="candidates" element={<RankedCandidates />} />
           </Route>
 
           {/* Admin routes */}

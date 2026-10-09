@@ -13,13 +13,17 @@ const healthRouter = require('./routes/health');
 const authRouter = require('./routes/auth');
 const cvRouter = require('./routes/cv');
 const candidateRouter = require('./routes/candidates');
+const matchRouter = require('./routes/matches');
+const { seedLearningResources } = require('./config/seedResources');
 
 // Validate environment variables
 validateEnv();
 
 // Connect to database (skip in test mode unless explicit)
 if (process.env.NODE_ENV !== 'test') {
-  connectDB();
+  connectDB().then(() => {
+    seedLearningResources().catch(() => {});
+  });
 }
 
 const app = express();
@@ -59,6 +63,7 @@ app.use('/api/v1/health', healthRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/cvs', cvRouter);
 app.use('/api/v1/candidates', candidateRouter);
+app.use('/api/v1/matches', matchRouter);
 
 // 404 and error handling
 app.use(notFound);
