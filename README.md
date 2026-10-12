@@ -1,377 +1,246 @@
-# SkillMatch AI — Full-Stack AI-Powered Job–Candidate Matching & Skill Gap Analysis Platform
+# SkillMatch AI
+## AI-Based Job–Candidate Matching and Skill Gap Analysis
 
-[![Node.js](https://img.shields.io/badge/Node.js-v20%2B-green?logo=node.js)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-v18%2B-blue?logo=react)](https://react.dev/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-v0.115%2B-teal?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python)](https://python.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas%20%2F%20Local-green?logo=mongodb)](https://www.mongodb.com/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-Sentence%20Transformers-orange?logo=pytorch)](https://sbert.net/)
-[![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
+SkillMatch AI is a proposed academic capstone project that helps candidates understand how their CV aligns with a job description and helps recruiters review relevant candidates. It extracts skills from CVs and job descriptions, combines skill overlap with semantic similarity, and explains matched, partial, and missing skills.
 
-**SkillMatch AI** is an academic capstone platform designed to bridge the gap between job seekers and hiring teams. It combines modern full-stack web engineering with local open-weight dense embedding models and large language model (LLM) extraction to deliver explainable, evidence-based job compatibility scoring, granular skill-gap diagnosis, and curated learning resource pathways.
+> **Project status:** Academic capstone project. Features and scoring weights are proposed and must be validated during implementation and testing.
 
-> **Responsible AI Notice**: SkillMatch AI is designed strictly as a **decision-support tool**. It provides transparent, explainable recommendations and **never** makes automated hiring, selection, or rejection decisions.
+## Problem Statement
+Candidates may find it difficult to identify skills missing for a role, while recruiters may spend substantial time comparing CVs with job requirements manually. SkillMatch AI aims to support these tasks through skill extraction, explainable matching, and skill-gap feedback.
 
----
-
-## Table of Contents
-1. [Key Features](#key-features)
-2. [System Architecture](#system-architecture)
-3. [Technology Stack](#technology-stack)
-4. [Project Structure](#project-structure)
-5. [Matching & Scoring Methodology](#matching--scoring-methodology)
-6. [Prerequisites](#prerequisites)
-7. [Environment Configuration](#environment-configuration)
-8. [Installation & Setup](#installation--setup)
-   - [1. AI Microservice Setup](#1-ai-microservice-setup-python--fastapi)
-   - [2. Backend Setup](#2-backend-setup-nodejs--express)
-   - [3. Frontend Setup](#3-frontend-setup-react--vite)
-9. [API Documentation](#api-documentation)
-10. [Automated Testing & Verification](#automated-testing--verification)
-11. [Troubleshooting & FAQ](#troubleshooting--faq)
-12. [License & Acknowledgments](#license--acknowledgments)
-
----
+## Objectives
+- Extract candidate information and skills from CV files or pasted text.
+- Extract required skills from job descriptions.
+- Compare candidates and jobs using skill overlap and semantic similarity.
+- Show matched, partially matched, and missing skills with explanations.
+- Rank candidates for a job and help candidates understand skill gaps.
+- Recommend learning resources from a curated collection.
+- Keep match history and support PDF reports where implemented.
 
 ## Key Features
 
-### 👤 For Candidates
-* **Multi-Format CV Ingestion**: Upload resumes in PDF or DOCX format with size and mime-type security validation, or submit CV text directly.
-* **Intelligent Skill Extraction**: Identifies technical skills, tools, and methodologies with verifiable in-text evidence quotes.
-* **Interactive Skill Confirmation**: Candidate-in-the-loop review interface allowing users to adjust, add, or delete skills and proficiency levels before matching.
-* **Ranked Position Compatibility**: Browse open job requisitions ranked by overall compatibility from 0–100%.
-* **Skill-Gap Diagnosis**: Visual breakdown of **Matched**, **Partially Matched**, and **Missing** skills.
-* **Curated Learning Recommendations**: Verified, free learning pathways (documentation, tutorials, courses) retrieved directly from MongoDB to close identified gaps—**zero LLM hallucination**.
-* **Downloadable Match Reports**: Instant server-side PDF report generation summarizing compatibility metrics and learning roadmaps.
+### Candidate
+- Register and log in securely.
+- Upload a CV in PDF or DOCX format, or provide text where supported.
+- Review extracted candidate information and skills.
+- Compare a profile with a job description.
+- View matched, partial, and missing skills plus suggested learning resources.
+- Review previous matching results and export a report where implemented.
 
-### 🏢 For Recruiters
-* **Requisition Management**: Full CRUD capabilities for job descriptions with custom required vs. preferred skill weighting.
-* **Automated Job Skill Extraction**: Automated parsing of responsibilities and skill prerequisites.
-* **Ranked Applicant Pipelines**: View candidates ranked against open roles with transparent metric breakdowns.
-* **Data Privacy & Ownership**: Strict role-based access control (RBAC) ensuring recruiters can only inspect applicant pipelines for positions they own.
+### Recruiter
+- Create, update, view, and manage job postings.
+- Extract skills from job descriptions.
+- View and rank candidates against a selected job.
+- Review explanations behind matching results.
 
-### 🛡️ For Administrators & System Safety
-* **Role-Based Access Control**: Strict candidate, recruiter, and admin authorization backed by bcrypt-hashed passwords and signed JWT tokens.
-* **Taxonomy Normalization**: Canonical normalization covering 45+ industry standard skill aliases (e.g., `k8s` → `Kubernetes`, `js` → `JavaScript`).
-* **Zero Fabrication Guarantee**: Transparent, deterministic mathematical formula combining weighted skill overlap and cosine semantic similarity.
+### Administration
+- Role-based access and basic user/job management, subject to final implementation.
 
----
+## Technology Stack
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| Frontend | React, Vite, Tailwind CSS, Axios | UI and API communication |
+| Main backend | Node.js, Express.js | REST APIs and application logic |
+| Authentication | JWT, bcrypt | Token-based authentication and password hashing |
+| Database | MongoDB Atlas, Mongoose | Users, CV/job data, skills, and match history |
+| AI service | Python, FastAPI | AI and matching endpoints |
+| Language model | Mistral API, LangChain | Structured skill extraction and explanations |
+| Embeddings | Sentence Transformers `all-MiniLM-L6-v2` | Local text embeddings for semantic comparison |
+| Document processing | PyMuPDF, `python-docx` | PDF and DOCX text extraction |
+| Data/ML utilities | NumPy, scikit-learn | Similarity and evaluation utilities |
+
+Confirm exact package versions against the repository's dependency files before deployment.
 
 ## System Architecture
 
 ```text
-                               +----------------------------+
-                               |     User Browser (SPA)     |
-                               |    React + Vite + Tailwind |
-                               +--------------+-------------+
-                                              |
-                                              | HTTP REST (JSON / Multipart)
-                                              v
-                               +----------------------------+
-                               |    Main Express Backend    |
-                               |  Port 5000 (Auth, RBAC,    |
-                               |  Business Logic, PDFKit)   |
-                               +-------+------------+-------+
-                                       |            |
-                     Mongoose / Queries|            | Internal HTTP REST (API Key)
-                                       v            v
-           +-----------------------------+   +------------------------------------+
-           |       MongoDB Atlas /       |   |       Python FastAPI Service       |
-           |     Local DB (Port 27017)   |   |        Port 8000 (AI Logic)        |
-           |                             |   +------------------+-----------------+
-           | - Users & Auth Credentials  |                      |
-           | - Candidate Profiles & CVs  |       +--------------+--------------+
-           | - Job Postings & Skills     |       |                             |
-           | - Curated Learning Seeds    |       v                             v
-           | - Persisted Match Results   |  +-------------------+    +-------------------+
-           +-----------------------------+  |  Local Embeddings |    |    Mistral AI     |
-                                            |  all-MiniLM-L6-v2 |    | (LangChain Structured|
-                                            | (384-d PyTorch)   |    |    Extraction)    |
-                                            +-------------------+    +-------------------+
+Candidate / Recruiter
+        |
+        v
+React + Vite + Tailwind CSS
+        |
+        v
+Node.js + Express REST API
+  |         |           |
+  |         |           +--> JWT / bcrypt authentication
+  |         +--------------> MongoDB Atlas
+  +------------------------> Python FastAPI AI Service
+                                  |
+                                  +--> PDF / DOCX text extraction
+                                  +--> Mistral API via LangChain
+                                  +--> Sentence Transformers embeddings
+                                  +--> Skill matching and explanations
 ```
 
----
+The frontend should communicate with the main backend, which calls the AI service as needed. Keep API keys on the server side; never place them in frontend code.
 
-## Technology Stack
+## How Matching Works
+1. Extract text from a candidate CV and a job description.
+2. Identify and normalize skills in both documents.
+3. Calculate a weighted skill-overlap score.
+4. Generate text embeddings and calculate semantic similarity.
+5. Combine the signals into a configurable match score.
+6. Return matched, partial, and missing skills with explanations.
+7. Optionally rank candidates and suggest learning resources.
 
-| Layer | Technologies |
-|---|---|
-| **Frontend** | React 18, Vite, Tailwind CSS, React Router v6, Axios, Lucide React, React Hot Toast |
-| **Backend** | Node.js (v20+), Express.js, MongoDB / Mongoose, JWT, bcryptjs, Multer, PDFKit, Morgan, Helmet |
-| **AI Microservice** | Python 3.11+, FastAPI, Uvicorn, Pydantic v2, PyMuPDF (fitz), python-docx |
-| **Embeddings & NLP**| Sentence Transformers (`all-MiniLM-L6-v2`), PyTorch, NumPy, Scikit-learn |
-| **LLM Orchestration**| LangChain, Mistral AI (`mistral-small-latest`) |
-| **Testing** | Jest, Supertest (Express - 49 tests) & Pytest, HTTPX (FastAPI - 19 tests) |
+A provisional formula discussed for the project is:
 
----
+`Final Score = 0.60 × Skill Overlap + 0.40 × Semantic Similarity`
 
-## Project Structure
+These weights are starting points, not validated results. Tune and evaluate them using suitable test cases. **A similarity score is not a probability of being hired or a guarantee of candidate quality.**
 
-```text
-SkillMatch-AI/
-├── ai-service/                   # Python FastAPI AI microservice
-│   ├── app/
-│   │   ├── config.py             # Environment settings & service configuration
-│   │   ├── document_parser.py    # PyMuPDF and python-docx text extractors
-│   │   ├── embeddings.py         # all-MiniLM-L6-v2 Sentence Transformers loader
-│   │   ├── extraction.py         # Mistral LangChain extraction & heuristics
-│   │   ├── matching.py           # Hybrid scoring & cosine similarity engine
-│   │   ├── normalization.py      # Skill alias taxonomy resolver (45+ aliases)
-│   │   ├── schemas.py            # Pydantic request & response models
-│   │   └── main.py               # FastAPI application & route declarations
-│   ├── tests/                    # Pytest test suite (19 tests)
-│   └── requirements.txt          # Python dependencies
-│
-├── backend/                      # Node.js Express REST API
-│   ├── src/
-│   │   ├── config/               # Database connection & learning resource seeders
-│   │   ├── controllers/          # Auth, CV, Candidate, Job, and Match controllers
-│   │   ├── middleware/           # JWT authentication, RBAC, Multer upload, errors
-│   │   ├── models/               # Mongoose schemas (User, Job, Profile, MatchResult)
-│   │   ├── routes/               # Express route definitions
-│   │   ├── services/             # Axios client communicating with FastAPI
-│   │   ├── utils/                # Server-side PDFKit report generator
-│   │   └── server.js             # Express entry point
-│   ├── tests/                    # Jest test suite (49 tests)
-│   └── package.json
-│
-├── frontend/                     # React + Vite Single Page Application
-│   ├── src/
-│   │   ├── components/           # Reusable UI widgets & page headers
-│   │   ├── contexts/             # AuthContext (JWT session state)
-│   │   ├── layouts/              # AppLayout (Sidebar/Navbar) & AuthLayout
-│   │   ├── pages/                # Candidate, Recruiter, Auth, and Landing views
-│   │   ├── routes/               # ProtectedRoute & role guards
-│   │   ├── services/             # Axios API services (auth, cv, match)
-│   │   ├── App.jsx               # Main application routing
-│   │   └── main.jsx
-│   ├── index.html
-│   └── package.json
-│
-└── docs/                         # Specifications & Methodology
-    ├── architecture.md           # Architecture diagrams & component flows
-    └── scoring-formula.md        # Mathematical scoring formulations & proofs
+## Getting Started
+
+The commands below are a setup guide. Adjust paths and scripts to match the actual repository.
+
+### Prerequisites
+- Node.js and npm
+- Python version supported by the project's dependencies (Python 3.11 is a reasonable starting point)
+- MongoDB Atlas database
+- Mistral API key for LLM-based extraction/explanations
+- Git
+
+### 1. Clone the repository
+```bash
+git clone <YOUR_REPOSITORY_URL>
+cd <YOUR_PROJECT_DIRECTORY>
 ```
 
----
+### 2. Install and run the frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## Matching & Scoring Methodology
+### 3. Install and run the backend
+In another terminal:
+```bash
+cd backend
+npm install
+npm run dev
+```
+If `dev` is not defined in `package.json`, use the script provided by the project, such as `npm start`.
 
-SkillMatch AI calculates a transparent, deterministic **Hybrid Fit Score** from 0 to 100:
+### 4. Set up the Python AI service
+Enter the actual AI-service directory (for example, `ai-service/`):
+```bash
+python -m venv .venv
+```
 
-$$\text{Final Fit Score} = 0.60 \times \text{Skill Overlap Score} + 0.40 \times \text{Semantic Similarity Score}$$
+Activate it on Windows PowerShell:
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
-### 1. Weighted Skill Overlap (60% Weight)
-* **Required Skills**: 70% of the overlap score.
-* **Preferred Skills**: 30% of the overlap score.
-* **Credit per Skill**:
-  - **Matched (1.0 Credit)**: Exact canonical taxonomy match OR $\text{CosineSim} \ge 0.80$.
-  - **Partially Matched (0.5 Credit)**: Transferable knowledge ($0.55 \le \text{CosineSim} < 0.80$).
-  - **Missing (0.0 Credit)**: No verifiable evidence found ($\text{CosineSim} < 0.55$).
+Activate it on macOS/Linux:
+```bash
+source .venv/bin/activate
+```
 
-### 2. Contextual Semantic Similarity (40% Weight)
-* Evaluates the contextual alignment between the candidate background and the job requirements using dense embeddings:
-  $$\vec{u} = \text{Embed}(\text{Candidate Context}), \quad \vec{v} = \text{Embed}(\text{Job Description})$$
-* Because vectors are $L_2$ unit-normalized:
-  $$\text{CosineSim}(\vec{u}, \vec{v}) = \vec{u} \cdot \vec{v}$$
-* Mapped directly to a 0–100 scale: $\text{Semantic Score} = \max(0.0, \min(1.0, \text{CosineSim})) \times 100$.
+If a `requirements.txt` exists:
+```bash
+pip install -r requirements.txt
+```
 
-For full mathematical proofs, refer to [`docs/scoring-formula.md`](docs/scoring-formula.md).
+Run the service using the real module path. For example, if the entry point is `main.py`:
+```bash
+uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+Confirm the actual folder and module names in the repository; these are examples.
 
----
+## Environment Variables
 
-## Prerequisites
+Create local `.env` files in the appropriate service directories. Use the exact names your code reads. Example backend configuration:
 
-Before starting, ensure you have the following installed:
-* **Node.js**: v20.x or v22.x+ (includes `npm`)
-* **Python**: v3.11.x (recommended) or v3.12.x
-* **MongoDB**: A running local MongoDB instance on port 27017 or a MongoDB Atlas connection URI.
-* **Git**: Installed and configured.
-
----
-
-## Environment Configuration
-
-### 1. AI Microservice (`ai-service/.env`)
-Create `ai-service/.env` by copying from `ai-service/.env.example`:
 ```env
-MISTRAL_API_KEY=your_mistral_api_key_here
+PORT=5000
+NODE_ENV=development
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster>/<database>
+JWT_SECRET=<long-random-secret>
+JWT_EXPIRES_IN=7d
+CLIENT_URL=http://localhost:5173
+AI_SERVICE_URL=http://127.0.0.1:8000
+```
+
+Example AI-service configuration:
+
+```env
+MISTRAL_API_KEY=<your-mistral-api-key>
 MISTRAL_MODEL=mistral-small-latest
-AI_SERVICE_API_KEY=internal_dev_key
-AI_SERVICE_PORT=8000
 AI_SERVICE_HOST=127.0.0.1
+AI_SERVICE_PORT=8000
 MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
 LOG_LEVEL=info
 ```
-> *Note*: If `MISTRAL_API_KEY` is not provided, the service automatically engages an offline heuristic skill extractor so development never blocks.
 
-### 2. Express Backend (`backend/.env`)
-Create `backend/.env` by copying from `backend/.env.example`:
-```env
-PORT=5000
-MONGODB_URI=mongodb://127.0.0.1:27017/skillmatch
-JWT_SECRET=dev_secret_key_change_in_production_skillmatch_32char
-JWT_EXPIRES_IN=7d
-AI_SERVICE_URL=http://127.0.0.1:8000
-AI_SERVICE_API_KEY=internal_dev_key
-CLIENT_URL=http://localhost:5173
-NODE_ENV=development
-MAX_FILE_SIZE_MB=10
-UPLOAD_PATH=./uploads
+These names are examples; check what the code actually reads. Add `.env`, virtual environments, uploaded private CVs, and secrets to `.gitignore`. You may commit a `.env.example` with placeholders only—never real credentials.
+
+## Typical Workflow
+1. Candidate registers and logs in.
+2. Candidate uploads a CV or provides CV text.
+3. The system extracts and stores relevant candidate information.
+4. Recruiter creates a job description.
+5. The AI service extracts and normalizes job skills.
+6. The system generates embeddings and calculates match scores.
+7. The interface displays match results and skill gaps.
+8. The candidate reviews suggested learning resources; authorized users may review or export results.
+
+The exact workflow depends on which features have been implemented.
+
+## Suggested Project Structure
+
+This is a suggested layout; update it to match the actual repository.
+
+```text
+SkillMatch-AI/
+├── frontend/           # React + Vite + Tailwind CSS
+├── backend/            # Node.js + Express API
+├── ai-service/         # Python + FastAPI
+├── docs/               # Proposal, diagrams, and documentation
+├── .gitignore
+└── README.md
 ```
 
----
+## Security and Responsible Use
+- Never commit Mistral keys, database credentials, JWT secrets, or other secrets.
+- Keep CVs and personal information private; collect and retain only necessary data.
+- Validate uploads, restrict accepted file types and sizes, and handle malformed documents safely.
+- Apply authentication and authorization checks to protected routes.
+- Use HTTPS and appropriate secret management in deployment.
+- Explain matching results and let users correct inaccurate extracted information where feasible.
+- Treat results as decision-support information only. Do not automatically reject or hire a person solely from an AI score.
+- Test for bias and uneven performance across CV formats, languages, and candidate groups.
 
-## Installation & Setup
+## Limitations and Future Work
 
-### 1. AI Microservice Setup (Python / FastAPI)
-Open a terminal in the project root:
-```bash
-cd ai-service
+### Initial-scope limitations
+- Full Bangla CV processing may be outside the initial scope.
+- Extraction quality depends on CV formatting, document quality, and the language model.
+- The semantic model may miss domain-specific context.
+- Scores and thresholds require evaluation; they must not be presented as calibrated hiring probabilities.
+- Live job scraping, external ATS integration, voice/video interviews, and native mobile apps are outside the initial scope.
 
-# Create virtual environment
-python -m venv .venv
+### Possible future improvements
+- Better multilingual CV parsing.
+- Evaluated and calibrated scoring methods.
+- More transparent explanations and candidate feedback.
+- Expanded learning-resource recommendations.
+- External ATS integrations and carefully governed job-source integrations.
 
-# Activate virtual environment
-# Windows (PowerShell):
-.\.venv\Scripts\Activate.ps1
-# Linux / macOS:
-source .venv/bin/activate
+## Team and Collaboration
 
-# Install required dependencies
-pip install -r requirements.txt
+This is a group capstone project. Keep the README, proposal, diagrams, and other project documents in the shared team workspace or repository so all team members can access the current versions.
 
-# Start the FastAPI service
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-```
-*Health check verification*: Open `http://127.0.0.1:8000/health`.
+Before sharing files outside the team or submitting them, verify team member names and IDs, instructor details, repository links, and project scope. **Never share `.env` files, API keys, passwords, private CVs, or database credentials.** If the proposal PDF is shared with teammates or submitted through the course platform, make sure everyone uses the same final version.
 
----
+### Proposed responsibilities
+- **AI/ML and backend/database:** AI pipeline, matching logic, API integration, and data model.
+- **Frontend and documentation:** UI, API integration, README, diagrams, and project documentation.
+- **Testing and quality assurance:** test plans, functional testing, bug reports, and validation of matching results.
 
-### 2. Backend Setup (Node.js / Express)
-Open a second terminal window:
-```bash
-cd backend
+Confirm final names, student IDs, and responsibilities with the group before submission.
 
-# Install dependencies
-npm install
-
-# Start the Express server
-npm run dev
-```
-*Health check verification*: Open `http://127.0.0.1:5000/api/v1/health`.  
-*Database Seeding*: On initial boot, the backend automatically seeds verified learning resources for skills such as Docker, Kubernetes, React, Python, AWS, and PostgreSQL.
-
----
-
-### 3. Frontend Setup (React / Vite)
-Open a third terminal window:
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Start the Vite development server
-npm run dev
-```
-*Application Access*: Open [http://localhost:5173](http://localhost:5173) in your web browser.
-
----
-
-## API Documentation
-
-### Authentication (`/api/v1/auth`)
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| `POST` | `/api/v1/auth/register` | Public | Register a candidate or recruiter account |
-| `POST` | `/api/v1/auth/login` | Public | Authenticate user and receive JWT token |
-| `GET` | `/api/v1/auth/me` | Private | Retrieve authenticated user profile |
-
-### CV Upload & Extraction (`/api/v1/cvs`)
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| `POST` | `/api/v1/cvs/upload` | Candidate | Upload PDF or DOCX file (Multer 10MB limit) |
-| `POST` | `/api/v1/cvs/manual-text` | Candidate | Submit raw CV text for skill extraction |
-| `GET` | `/api/v1/cvs/my-cv` | Candidate | Retrieve current CV metadata & extracted skills |
-
-### Candidate Profile & Skills (`/api/v1/candidates`)
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| `GET` | `/api/v1/candidates/profile` | Candidate | Get profile information and confirmed skills |
-| `PUT` | `/api/v1/candidates/profile/skills` | Candidate | Review and confirm skill inventory |
-
-### Job Management (`/api/v1/jobs`)
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| `POST` | `/api/v1/jobs` | Recruiter, Admin | Create a new job description with requirements |
-| `GET` | `/api/v1/jobs` | Public | List open job postings (supports query filters) |
-| `GET` | `/api/v1/jobs/:id` | Public | Retrieve detailed job posting |
-| `PUT` | `/api/v1/jobs/:id` | Recruiter (Owner) | Update job specifications |
-| `DELETE` | `/api/v1/jobs/:id` | Recruiter (Owner) | Remove job posting |
-
-### Matching & Reports (`/api/v1/matches`)
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| `POST` | `/api/v1/matches/calculate` | Private | Compute candidate-job compatibility score |
-| `GET` | `/api/v1/matches/ranked-jobs` | Candidate | Get all open jobs ranked by fit score |
-| `GET` | `/api/v1/matches/ranked-candidates/:jobId` | Recruiter (Owner) | Get ranked candidate pipeline for job |
-| `GET` | `/api/v1/matches/:id` | Owner / Admin | Retrieve full match diagnostics & learning paths |
-| `GET` | `/api/v1/matches/:id/pdf` | Owner / Admin | Stream generated PDF report |
-| `GET` | `/api/v1/matches/history` | Candidate | Review past match calculations |
-
----
-
-## Automated Testing & Verification
-
-The project includes unit, integration, and end-to-end audit test suites across all components:
-
-### 1. AI Service Unit Tests (Pytest)
-Validates document parsing (PDF/DOCX), Mistral parsing fallbacks, taxonomy normalization, and deterministic cosine similarity.
-```bash
-cd ai-service
-.\.venv\Scripts\pytest tests/ -v
-```
-*Result*: **19 passing tests** (0 failures).
-
-### 2. Express Backend Integration Tests (Jest)
-Validates auth routes, bcrypt hashing, JWT issuance, RBAC, Multer upload validation, job CRUD, match calculations, ownership permissions, and PDF streams.
-```bash
-cd backend
-npm test
-```
-*Result*: **5 test suites, 49 passing tests** (0 failures).
-
-### 3. Frontend Production Build Check
-```bash
-cd frontend
-npm run build
-```
-*Result*: Builds successfully with Vite (0 errors).
-
----
-
-## Troubleshooting & FAQ
-
-**Q: The AI microservice fails to download the Sentence Transformers model.**  
-*A*: On initial startup, `all-MiniLM-L6-v2` (~90MB) is downloaded and cached in `~/.cache/huggingface/hub`. Ensure an active internet connection on first boot. If offline, the built-in deterministic hash vector fallback will engage automatically.
-
-**Q: Can I use MongoDB Atlas instead of a local database?**  
-*A*: Yes. Replace `MONGODB_URI` in `backend/.env` with your MongoDB Atlas cluster connection string:
-```env
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/skillmatch?retryWrites=true&w=majority
-```
-
-**Q: Why does the CV extraction still return skills without a Mistral API key?**  
-*A*: SkillMatch AI is built defensively. If `MISTRAL_API_KEY` is absent or encounters network limits, the service triggers a local rule-based heuristic extractor matching against the controlled taxonomy to ensure zero downtime.
-
----
-
-## License & Acknowledgments
-
-* **License**: Released under the [MIT License](LICENSE).
-* **Project Type**: Academic Capstone Project — Software Engineering & Applied Machine Learning.
-* **Libraries & Models**:
-  - Sentence Transformers (`all-MiniLM-L6-v2`) by UKPLab / Hugging Face.
-  - LangChain & Mistral AI for structured document extraction.
-  - PyMuPDF (`fitz`) and PDFKit for document processing.
+## License
+No license has been specified. Add one only after the team agrees on how the project may be reused or distributed.
